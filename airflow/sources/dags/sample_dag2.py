@@ -1,18 +1,9 @@
-# Write Dags
-
-
-## First sample dag
-
-Let's write our first Dag definition file: `sample_dag1.py`
-
-```python
 import textwrap
 from datetime import datetime, timedelta
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
-
 with DAG(
-    "sample_dag1",
+    "pengfei_dag2",
     default_args={
         "depends_on_past": False,
         "email": ["pengfei.liu@casd.eu"],
@@ -53,10 +44,3 @@ with DAG(
     )
 
     t1 >> t2 >> t3
-
-```
-
-> Python script is really just a configuration file specifying the DAG’s structure as code
-
-We can divide this code into parts:
-- import 

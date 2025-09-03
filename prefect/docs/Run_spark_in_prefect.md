@@ -72,3 +72,14 @@ def main_flow():
     results = spark_subflow()
     print(results)
 ```
+
+
+## 3. Best practices for running spark on prefect
+
+Best Practices:
+
+- Use one SparkSession per flow run (avoid per-task sessions).
+- Use local[*] to parallelize across all CPU cores.
+- Keep Spark jobs self-contained and avoid passing DataFrames between Prefect tasks.
+- Use Prefect for orchestration (dependencies, retries), Spark for computation.
+- Test locally on Windows, but design workflows so they can later run on Linux cluster or cloud with minimal code change.

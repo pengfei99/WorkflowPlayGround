@@ -99,12 +99,28 @@ commit;
 You need to tell airflow which db it can connect
 
 ```shell
-# 
 # before changing airflow.cfg, you should check postgresql connectivity first
 psql -U airflow_user -h localhost airflow_db
+
+# in airflow.cfg, you need to configure airflow to use postgres
+# general form: sql_alchemy_conn = postgresql+psycopg2://login:pwd@url/db_name
+sql_alchemy_conn = postgresql+psycopg2://airflow_user:pwd@localhost/airflow_db
 ```
 
-### airflow.cfg 
+### 2.2 Web server config
+
+Airflow offers a web GUI, so it requires a port to expose the service.
+
+Depends on your requirements, you need to modify the below config.
+```ini
+[webserver]
+# Webserver configuration
+web_server_host = 0.0.0.0
+web_server_port = 8080
+base_url = http://localhost:8080
+```
+
+### Complete example of airflow.cfg 
 
 Below is an example of config which you need to adapt to your environment. This config works for single server with 
 `postgres` and `LocalExecutor`.
@@ -117,7 +133,8 @@ airflow_home = /opt/airflow/airflow-2.9.2
 
 # Executor type
 executor = LocalExecutor
-
+# recommended for LocalExecutor
+store_serialized_dags = True  
 # Metadata database (PostgreSQL)
 # general form: sql_alchemy_conn = postgresql+psycopg2://login:pwd@url/db_name
 sql_alchemy_conn = postgresql+psycopg2://airflow_user:pwd@localhost/airflow_db
@@ -168,7 +185,7 @@ log_processor_filename_template = {{ filename }}.log
 ```
 
 
-### start airflow
+## 3 Start airflow for testing
 
 ```shell
 # init db
@@ -188,3 +205,52 @@ airflow webserver --port 8080
 # start the 
 airflow scheduler
 ```
+
+After the above command, you should be able to access airflow web GUI.
+
+```shell
+curl http://localhost:8080
+```
+
+### 3.1 Add a test dag
+
+Below is a minimum dag specification to run in airflow
+
+```python
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime
+
+# Function to run
+def hello():
+    print("Hello Airflow!")
+
+# DAG definition
+with DAG(
+    dag_id="hello_airflow",
+    start_date=datetime(2025, 9, 4),
+    schedule_interval=None,  # Manual trigger
+    catchup=False,
+    tags=["test"],
+) as dag:
+
+    hello_task = PythonOperator(
+        task_id="say_hello",
+        python_callable=hello
+    )
+
+```
+
+> we can name it as `hello_airflow.py` and place it in `/opt/airflow/airflow-2.9.2/dags`
+> If you can't see the dag in your webserver. You need to check the below points
+> - airflow scheduler is running
+> - DAG file is valid (no syntax error) and finish with .py
+> - start_date is in the past.
+> - DAG assigned correctly in global scope
+> - .py file permissions allow airflow scheduler to read the DAG
+> 
+```shell
+
+```
+
+## 4.

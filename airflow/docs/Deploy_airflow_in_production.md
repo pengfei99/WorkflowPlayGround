@@ -217,6 +217,14 @@ airflow users create \
     --lastname Liu \
     --role Admin \
     --email pengfei.liu@casd.eu
+
+# create a service account for openmetadata
+airflow users create \
+    --username openmeta \
+    --firstname openmeta \
+    --lastname casd \
+    --role Admin \
+    --email openmetadata@casd.eu
     
 # start the web server
 airflow webserver --port 8080

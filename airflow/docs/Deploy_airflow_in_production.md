@@ -76,10 +76,13 @@ pyenv offers many possibilities to create venv, as our airflow will be managed b
 
 ```shell
 # create venv
-/home/pliu/.pyenv/versions/3.11.9/bin/python3 -m venv /opt/airflow/venv
+/home/pliu/.pyenv/versions/3.11.9/bin/python3 -m venv /opt/airflow/airflow-venv
 
 # Set proper ownership for airflow user
-sudo chown -R airflow:airflow /opt/airflow/venv
+sudo chown -R airflow:airflow /opt/airflow/airflow-venv
+
+# to activate it
+source /opt/airflow/airflow-venv/bin/activate
 ```
 ## 2. Configure airflow
 
@@ -106,6 +109,13 @@ psql -U airflow_user -h localhost airflow_db
 # general form: sql_alchemy_conn = postgresql+psycopg2://login:pwd@url/db_name
 sql_alchemy_conn = postgresql+psycopg2://airflow_user:pwd@localhost/airflow_db
 ```
+
+> If your password contains special characters, you need to encod it with URL encoding
+> - @ → %40
+> - : → %3A 
+> - / → %2F
+> You also need to add an extra % before
+> For example, if you have a password = P@ss:word/123, you need to write P%%40ss%%3Aword%%2F123 in the airflow.cfg
 
 ### 2.2 Web server config
 
@@ -249,8 +259,103 @@ with DAG(
 > - DAG assigned correctly in global scope
 > - .py file permissions allow airflow scheduler to read the DAG
 > 
+
 ```shell
+# test dag valid or not
+airflow dags list
+
+# expected output
+dag_id        | fileloc                                      | owners  | is_paused
+==============+==============================================+=========+==========
+hello_airflow | /opt/airflow/airflow-2.9.2/dags/workflow1.py | airflow | None
+
+# run the dag as test run
+# general form airflow dags test <dag_id> <start_date>
+airflow dags test hello_airflow 2025-09-04
+```
+
+## 4. Run airflow as systemd service
+
+### 4.1 Web server unit file
+```shell
+# create airflow-webserver.service
+sudo vim /etc/systemd/system/airflow-webserver.service
+```
+```ini
+[Unit]
+Description=Airflow webserver
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+User=pliu
+Group=pliu
+Type=simple
+
+# Set environment variables
+Environment=AIRFLOW_HOME=/opt/airflow/airflow-2.9.2
+# for pyenv virtualenv
+# Environment=PATH=/home/pliu/.pyenv/versions/airflow-env/bin:/usr/local/bin:/usr/bin:/bin
+# for python native venv
+Environment=PATH=/opt/airflow/airflow-env/bin:/usr/local/bin:/usr/bin:/bin
+# this line is avoid airflow write in /run/airflow.pid, the python venv may not have rights
+# by setting this, airflow will write in its own folder
+Environment=TMPDIR=/opt/airflow/tmp
+
+# Start command (use pyenv’s venv directly)
+# ExecStart=/home/pliu/.pyenv/versions/airflow-env/bin/airflow webserver
+ExecStart=/opt/airflow/airflow-env/bin/airflow webserver
+ExecStop=/bin/kill -s TERM $MAINPID
+
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+```
+
+
+### 4.2 Scheduler unit file
+
+```shell
+# create airflow-scheduler.service
+sudo vim /etc/systemd/system/airflow-scheduler.service
+```
+
+```ini
+[Unit]
+Description=Airflow scheduler
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+User=pliu
+Group=pliu
+Type=simple
+
+# Set environment variables
+Environment=AIRFLOW_HOME=/opt/airflow/airflow-2.9.2
+Environment=PATH=/home/pliu/.pyenv/versions/airflow-env/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/pliu/.pyenv/versions/airflow-env/bin/airflow scheduler
+ExecStop=/bin/kill -s TERM $MAINPID
+
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
 
 ```
 
-## 4.
+### 4.3 Reload systemd for adding new unit files
+
+```shell
+sudo systemctl daemon-reload
+
+sudo systemctl start airflow-webserver
+sudo systemctl start airflow-scheduler
+
+# you can check the output of the service with 
+sudo journalctl -u airflow-webserver -f
+```
+

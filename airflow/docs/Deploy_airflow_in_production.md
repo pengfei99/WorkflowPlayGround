@@ -7,13 +7,20 @@ In production environment, airflow provides different architectures:
 
 In this tutorial, we only show the single server setup.
 
+We will follow the below steps:
 
-## 1. Install python and system dependencies
+- Install python and Apache Airflow
+- Install Postgresql and Configuration
+- Configure Apache Airflow
+- Testing with simple dag
+- Write unit file for Airflow to run as a systemd service
 
-As we mentioned before, airflow is released as a python packages. So we need to prepare a python virtual environment
+## 1. Install airflow
+
+As we mentioned before, **airflow** is released as a `python packages`. So we need to prepare a `python virtual environment`
 to install airflow properly. In debian 11, the default python is 3.9, we don't recommend it at all. 
 
-We recommend you to use pyenv to install python
+> We recommend you to use pyenv to install python
 
 ### 1.1 Use the debian default package(not recommended)
 ```shell
@@ -89,6 +96,8 @@ source /opt/airflow/airflow-venv/bin/activate
 ### 2.1. Use postgresql as db backend
 
 By default, airflow uses sqlite as db backend, we recommend you to use postgresql
+
+The doc for installing postgresql is [here](https://github.com/pengfei99/DataCatalogPlayGround/blob/master/OpenMetadata/Deplyement/bare_metal/01.Install_required_modules.md)
 
 Suppose you have created a database and user for airflow in postgresql
 ```shell

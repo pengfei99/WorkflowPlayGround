@@ -66,6 +66,15 @@ spark.stop()
 
 ## 2. Use pyspark in the dag config file
 
+When you run pyspark in airflow, depends on your spark version, you may encounter the below error 
+`java.io.IOException: Failed to create a temp directory (under artifacts) after 10 attempts!`.
+
+**Spark 4.0** now uses two key directories:
+- **spark.local.dir**: where shuffle/temp data goes
+- **spark.sql.artifact.dir**: new in Spark 4.0, used for plan artifacts
+
+> I can't solve this problem at all
+
 ```python
 import os
 from airflow import DAG
@@ -153,6 +162,7 @@ def wordcount():
             .master("local[*]")
             .appName("WordCount_Airflow")
             .config("spark.local.dir", local_tmp)
+            .config("spark.sql.artifact.dir", artifact_dir)
             .config("spark.sql.adaptive.enabled", "true")
             .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
             .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")

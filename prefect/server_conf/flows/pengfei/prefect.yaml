@@ -1,0 +1,11 @@
+# prefect.yaml
+name: spark_project
+prefect-version: 3.4.24
+
+deployments:
+  - name: spark_wordcount
+    entrypoint: spark_wc_flow.py:main_flow
+    work_pool:
+      name: local-pool # for local execution
+      type: process
+      tags: [spark, local]

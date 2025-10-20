@@ -163,4 +163,5 @@ cython_debug/
 airflow_venv/
 wpg_venv/
 .python-version
+data/out
 

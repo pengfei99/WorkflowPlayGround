@@ -2,10 +2,20 @@
 name: spark_project
 prefect-version: 3.4.24
 
+# it can have multiple deployments
 deployments:
+  # deployment 1
   - name: spark_wordcount
     entrypoint: spark_wc_flow.py:main_flow
     work_pool:
       name: local-pool # for local execution
+      type: process
+      tags: [spark, local]
+
+  # Deployment 2: ETL flow
+  - name: simple_etl
+    entrypoint: simple_flow.py:etl_flow
+    work_pool:
+      name: local-pool
       type: process
       tags: [spark, local]

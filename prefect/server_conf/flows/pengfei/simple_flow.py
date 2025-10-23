@@ -1,9 +1,12 @@
-from prefect import flow, task
+from prefect import flow, task, get_run_logger
 
 @task(log_prints=True)
 def extract():
     data = [1, 2, 3]
-    print(f"Task1: Extracting data: {data}")
+    msg = f"Task1: Extracting data: {data}"
+    logger = get_run_logger()
+    logger.info(msg)
+    print(msg)
     return data
 
 @task(log_prints=True)

@@ -164,4 +164,8 @@ airflow_venv/
 wpg_venv/
 .python-version
 data/out
-
+prefect/server_conf/dlq/
+prefect/server_conf/prefect.db
+prefect/server_conf/prefect.db-shm
+prefect/server_conf/prefect.db-wal
+prefect/server_conf/profiles.toml
